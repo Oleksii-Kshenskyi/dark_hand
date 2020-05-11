@@ -64,7 +64,6 @@ defmodule DarkHand.Test.Unit.HTTP.HTTPStream do
       generic_download_and_asserts(2.02, context)
     end
 
-    @tag timeout: :infinity
     @tag :unit
     @tag :unitfast
     test "downloads a 3KB file", context do
