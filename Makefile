@@ -14,11 +14,16 @@ tests:
 unit:
 	mix test --only unit
 
+unitfast:
+	mix test --only unitfast
+
 exploratory:
 	mix test --only exploratory
 
 t: tests
 
 u: unit
+
+uf: unitfast
 
 e: exploratory
