@@ -1,4 +1,5 @@
 defmodule DarkHand.HTTP.HTTPStream do
+
   def get(url) do
     Stream.resource(
       fn -> httpoison_get(url) end,
@@ -11,7 +12,8 @@ defmodule DarkHand.HTTP.HTTPStream do
     HTTPoison.get!(
       url, %{},
       stream_to: self(),
-      async: :once
+      async: :once,
+      follow_redirect: true
     )
   end
 
@@ -31,7 +33,19 @@ defmodule DarkHand.HTTP.HTTPStream do
       %HTTPoison.AsyncEnd{id: ^id} ->
         IO.puts "Request complete!"
         {:halt, resp}
+      %HTTPoison.AsyncRedirect{to: to} = resp ->
+        IO.puts("[REDIRECTED] Following redirect to #{to}...")
+        IO.inspect(resp, label: "[REDIRECT] Your redirect response is: ")
+        execute_download(to)
+        {:halt, resp}
     end
+  end
+
+  def execute_download(url) do
+    url
+    |> get
+    |> Stream.into(url |> Path.basename |> File.stream!)
+    |> Stream.run
   end
 
 end
