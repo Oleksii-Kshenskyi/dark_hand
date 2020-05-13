@@ -1,5 +1,4 @@
 defmodule DarkHand.HTTP.HTTPStream do
-
   def get(url) do
     Stream.resource(
       fn -> httpoison_get(url) end,
@@ -21,8 +20,13 @@ defmodule DarkHand.HTTP.HTTPStream do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: code} ->
         IO.inspect(code, label: "AsyncStatus, code = ")
-        HTTPoison.stream_next(resp)
-        {[], resp}
+        case code do
+          200 ->
+            HTTPoison.stream_next(resp)
+            {[], resp}
+          _ ->
+            raise DarkHand.HTTP.Errors.HTTPResponseNotOKError
+        end
       %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
         IO.inspect(headers, label: "AsyncHeaders, headers = ")
         HTTPoison.stream_next(resp)
@@ -35,17 +39,47 @@ defmodule DarkHand.HTTP.HTTPStream do
         {:halt, resp}
       %HTTPoison.AsyncRedirect{to: to} = resp ->
         IO.puts("[REDIRECTED] Following redirect to #{to}...")
-        IO.inspect(resp, label: "[REDIRECT] Your redirect response is: ")
         execute_download(to)
         {:halt, resp}
     end
   end
 
   def execute_download(url) do
-    url
-    |> get
-    |> Stream.into(url |> Path.basename |> File.stream!)
-    |> Stream.run
+    try do
+      url
+      |> get
+      |> Stream.into(url |> Path.basename |> File.stream!)
+      |> Stream.run
+    rescue
+      e in HTTPoison.Error ->
+        e |> handle_httpoison_error
+      e in CaseClauseError ->
+        e |> handle_case_clause_error
+      e in DarkHand.HTTP.Errors.HTTPResponseNotOKError ->
+        e |> handle_darkhand_error
+    end
   end
 
+  defp handle_httpoison_error(e) do
+    error = e |> Map.fetch(:reason) |> elem(1)
+    case error do
+      :nxdomain -> IO.puts "[ERROR] Domain does not exist."
+      _ -> error |> IO.inspect([label: "[ERROR]"])
+    end
+  end
+
+  defp handle_case_clause_error(e) do
+    e
+    |> Map.fetch(:term)
+    |> elem(1)
+    |> IO.inspect([label: "[ERROR] no clause matching"])
+  end
+
+  defp handle_darkhand_error(e) do
+    e
+    |> Map.fetch(:message)
+    |> elem(1)
+    |> (&("[ERROR] " <> &1)).()
+    |> IO.puts
+  end
 end
