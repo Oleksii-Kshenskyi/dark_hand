@@ -45,41 +45,48 @@ defmodule DarkHand.HTTP.HTTPStream do
   end
 
   def execute_download(url) do
+    file_name = url |> Path.basename
     try do
       url
       |> get
-      |> Stream.into(url |> Path.basename |> File.stream!)
+      |> Stream.into(file_name |> File.stream!)
       |> Stream.run
     rescue
       e in HTTPoison.Error ->
-        e |> handle_httpoison_error
+        {e, file_name} |> handle_httpoison_error
       e in CaseClauseError ->
-        e |> handle_case_clause_error
+        {e, file_name} |> handle_case_clause_error
       e in DarkHand.HTTP.Errors.HTTPResponseNotOKError ->
-        e |> handle_darkhand_error
+        {e, file_name} |> handle_darkhand_error
     end
   end
 
-  defp handle_httpoison_error(e) do
+  defp handle_httpoison_error({e, file_name}) do
     error = e |> Map.fetch(:reason) |> elem(1)
     case error do
       :nxdomain -> IO.puts "[ERROR] Domain does not exist."
       _ -> error |> IO.inspect([label: "[ERROR]"])
     end
+
+    if file_name |> File.exists?, do: file_name |> File.rm!
   end
 
-  defp handle_case_clause_error(e) do
+  defp handle_case_clause_error({e, file_name}) do
     e
     |> Map.fetch(:term)
     |> elem(1)
     |> IO.inspect([label: "[ERROR] no clause matching"])
+
+    if file_name |> File.exists?, do: file_name |> File.rm!
   end
 
-  defp handle_darkhand_error(e) do
+  defp handle_darkhand_error({e, file_name}) do
     e
     |> Map.fetch(:message)
     |> elem(1)
     |> (&("[ERROR] " <> &1)).()
     |> IO.puts
+
+    if file_name |> File.exists?, do: file_name |> File.rm!
   end
 end
