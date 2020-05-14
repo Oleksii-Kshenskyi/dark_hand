@@ -1,4 +1,5 @@
 defmodule DarkHand.HTTP.HTTPStream do
+  import DarkHand.HTTP.URL
   def get(url) do
     Stream.resource(
       fn -> httpoison_get(url) end,
@@ -43,24 +44,36 @@ defmodule DarkHand.HTTP.HTTPStream do
   end
 
   def execute_download(url) do
-    file_name = url |> Path.basename
-    try do
-      url
-      |> get
-      |> Stream.into(file_name |> File.stream!)
-      |> Stream.run
+    case url |> is_url_downloadable? do
+      false ->
+        IO.puts "[ERROR] Argument [#{url}] is not a URL or a downloadable resource. Refusing to download."
+        System.halt(0)
+      true ->
+        file_name = url |> Path.basename
+        try do
+          url
+          |> get
+          |> Stream.into(file_name |> File.stream!)
+          |> Stream.run
 
-      IO.puts "Download complete!"
-    rescue
-      e in HTTPoison.Error ->
-        {e, file_name} |> handle_httpoison_error
-      e in CaseClauseError ->
-        {e, file_name} |> handle_case_clause_error
-      e in DarkHand.HTTP.Errors.HTTPResponseNotOKError ->
-        {e, file_name} |> handle_darkhand_error
-    catch
-      {:redirect, to} ->
-        {to, file_name} |> handle_redirect
+          IO.puts "Download complete!"
+        rescue
+          e in HTTPoison.Error ->
+            {e, file_name} |> handle_httpoison_error
+          e in CaseClauseError ->
+            {e, file_name} |> handle_case_clause_error
+          e in DarkHand.HTTP.Errors.HTTPResponseNotOKError ->
+            {e, file_name} |> handle_darkhand_error
+        catch
+          {:redirect, to} ->
+            to = case get_parsed(to) do
+              %{host: nil, path: path} ->
+                %{scheme: original_scheme, host: original_host} = get_parsed(url)
+                original_scheme <> "://" <> original_host <> path
+              _ -> to
+            end
+            {to, file_name} |> handle_redirect
+        end
     end
   end
 

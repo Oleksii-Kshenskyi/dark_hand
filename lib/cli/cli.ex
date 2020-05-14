@@ -1,6 +1,5 @@
 defmodule DarkHand.Application.CLI do
   import DarkHand.HTTP.HTTPStream
-  import DarkHand.HTTP.URL
   @module_doc """
     usage: ./dark_hand [--download|-d] <URL to download>
   """
@@ -23,12 +22,6 @@ defmodule DarkHand.Application.CLI do
     System.halt(0)
   end
   def execute_command({:download, url}) do
-    case url |> is_url_downloadable? do
-      false ->
-        IO.puts "[ERROR] Argument [#{url}] is not a URL or a downloadable resource. Refusing to download."
-        System.halt(0)
-      true ->
-        url |> execute_download
-    end
+    url |> execute_download
   end
 end
