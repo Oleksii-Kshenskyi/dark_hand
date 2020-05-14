@@ -19,7 +19,7 @@ defmodule DarkHand.HTTP.HTTPStream do
   defp httpoison_next_async(%HTTPoison.AsyncResponse{id: id} = resp) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: code} ->
-        IO.inspect(code, label: "AsyncStatus, code = ")
+        IO.inspect(code, label: "Status code returned by the page")
         case code do
           200 ->
             HTTPoison.stream_next(resp)
@@ -27,19 +27,17 @@ defmodule DarkHand.HTTP.HTTPStream do
           _ ->
             raise DarkHand.HTTP.Errors.HTTPResponseNotOKError
         end
-      %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
-        IO.inspect(headers, label: "AsyncHeaders, headers = ")
+      %HTTPoison.AsyncHeaders{id: ^id} ->
         HTTPoison.stream_next(resp)
         {[], resp}
       %HTTPoison.AsyncChunk{id: ^id, chunk: chunk} ->
         HTTPoison.stream_next(resp)
         {[chunk], resp}
       %HTTPoison.AsyncEnd{id: ^id} ->
-        IO.puts "Request complete!"
         {:halt, resp}
       %HTTPoison.AsyncRedirect{to: to} = resp ->
         IO.puts("[REDIRECTED] Following redirect to #{to}...")
-        execute_download(to)
+        throw {:redirect, to}
         {:halt, resp}
     end
   end
@@ -51,6 +49,8 @@ defmodule DarkHand.HTTP.HTTPStream do
       |> get
       |> Stream.into(file_name |> File.stream!)
       |> Stream.run
+
+      IO.puts "Download complete!"
     rescue
       e in HTTPoison.Error ->
         {e, file_name} |> handle_httpoison_error
@@ -58,6 +58,9 @@ defmodule DarkHand.HTTP.HTTPStream do
         {e, file_name} |> handle_case_clause_error
       e in DarkHand.HTTP.Errors.HTTPResponseNotOKError ->
         {e, file_name} |> handle_darkhand_error
+    catch
+      {:redirect, to} ->
+        {to, file_name} |> handle_redirect
     end
   end
 
@@ -88,5 +91,10 @@ defmodule DarkHand.HTTP.HTTPStream do
     |> IO.puts
 
     if file_name |> File.exists?, do: file_name |> File.rm!
+  end
+
+  defp handle_redirect({to, file_name}) do
+    if file_name |> File.exists?, do: file_name |> File.rm!
+    execute_download(to)
   end
 end
