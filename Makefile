@@ -1,9 +1,12 @@
-.SILENT: clean build test
+.SILENT: clean deps build test
 
-all: clean build
+all: clean deps build
 
 clean:
-	rm -rf _build dark_hand .elixir_ls
+	rm -rf _build dark_hand .elixir_ls deps
+
+deps:
+	mix deps.get
 
 build:
 	mix escript.build
@@ -19,6 +22,8 @@ unitfast:
 
 exploratory:
 	mix test --only exploratory
+
+b: build
 
 t: tests
 
