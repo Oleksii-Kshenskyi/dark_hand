@@ -13,6 +13,7 @@ Dark Hand has been tested on Manjaro and Windows. It should be functional on any
 ## On Manjaro/Arch
 
 - `sudo pacman -S git elixir make`
+- `git clone https://github.com/Oleksii-Kshenskyi/dark_hand.git`
 - `make`
 
 ## On Windows
@@ -28,6 +29,7 @@ My personal setup would be as follows:
 - `scoop install git` <= installs Git for Windows with Git Bash.
 - Open Git Bash (e.g. press `windows` => type 'Git Bash' => Enter).
 - `scoop install elixir`
+- `git clone https://github.com/Oleksii-Kshenskyi/dark_hand.git`
 - `make`
 
 ## After the build is successful
