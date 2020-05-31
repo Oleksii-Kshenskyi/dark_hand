@@ -1,5 +1,6 @@
 defmodule DarkHand.HTTP.HTTPStream do
   import DarkHand.HTTP.URL
+  import DarkHand.File.Name.Validate
   def get(url) do
     Stream.resource(
       fn -> httpoison_get(url) end,
@@ -49,7 +50,7 @@ defmodule DarkHand.HTTP.HTTPStream do
         IO.puts "[ERROR] Argument [#{url}] is not a URL or a downloadable resource. Refusing to download."
         System.halt(0)
       true ->
-        file_name = url |> Path.basename
+        file_name = url |> Path.basename |> correct_filename
         try do
           url
           |> get
