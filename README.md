@@ -40,7 +40,7 @@ Once this initial build is done, you could use `make b` for an incremental build
 
 ## How does it work?
 
-At the moment, the only thing Dark Hand can do is download files. There was a plan originally to implement downloading files from and uploading them to DropBox, but unfortunately there was no opportunity to dedicate enough time in May 2020 to implement that functionality (details in the `2020 Challenge` section).
+At the moment, the only thing Dark Hand can do is download files. There was a plan originally to implement downloading files from and uploading them to DropBox, but unfortunately there was no opportunity to dedicate enough time in May 2020 to implement that functionality.
 
 To download files, after `make` finishes successfully and an executable called `dark_hand` is generated, run the following in the command line:
 `./dark_hand -d <URL>` <= Linux
@@ -50,6 +50,10 @@ Note that `<URL>` here means a full standard URL like `https://http.cat/404.jpg`
 
 Also note that Dark Hand rejects URLs without explicitly specifying protocol (`http.cat/404.jpg`) and top-level domain URLs(`http://google.com/`). This is done on purpose to ensure safe behavior of the application.
 
-# 2020 Challenge
+# Useful info
 
-This project is a part of [Oleksii's 2020 One IT Project a Month Challenge](https://github.com/Oleksii-Kshenskyi/2020_challenge) where I would start and finish one IT (mostly programming except for one month, March) project within one month, one project a month starting Feb 2020. This project is the May 2020 project (Run One, which is currently the only one for this project, started on 05/01/2020 and ended on 05/31/2020). This is the reason why the only functionality implemented was downloading files (via asynchronous HTTP GET requests), while the originally planned downloading files from / uploading to DropBox was left unimplemented, due to the 05/31/2020 deadline. For precise statistics on estimations and time spent on this project, please refer to issue [#1](https://github.com/Oleksii-Kshenskyi/dark_hand/issues/1) of this project.
+This is a project that had been made from the ground up on the idea of doing it within a single months, not knowing anything about either Elixir or functional programming, or even about networking development. It was eventually made within the period of 05/01/2020 - 05/15/2020, just 2 weeks.
+
+For precise statistics on estimations and time spent on this project, please refer to issue [#1](https://github.com/Oleksii-Kshenskyi/dark_hand/issues/1) of this project.
+
+For this project's kanban board, see [here](https://github.com/Oleksii-Kshenskyi/dark_hand/projects/1).
